@@ -1,0 +1,36 @@
+package com.jdmpro.recipients;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.integration.annotation.ServiceActivator;
+import org.springframework.messaging.support.GenericMessage;
+
+import com.jdmpro.recipients.bindings.RecipientSink;
+import com.jdmpro.recipients.services.RecipientService;
+import com.ponomaryov.commonbeans.Recipient;
+
+@EnableBinding(RecipientSink.class)
+@Slf4j
+public class RecipientConsumer {
+
+	@Autowired
+	private RecipientService recipientService;
+	
+    @ServiceActivator(inputChannel = RecipientSink.INPUT)
+    public void receiveRecipient(GenericMessage<Recipient> message) {
+        log.info("Message: {} has been received------>>>>", message.getPayload());
+        Recipient input = message.getPayload();
+        if (input!=null) {
+        	com.jdmpro.recipients.domain.Recipient recipient = new com.jdmpro.recipients.domain.Recipient();
+        	recipient.setDob(input.getDob());
+        	recipient.setEmail(input.getEmail());
+        	recipient.setFirstName(input.getFirstName());
+        	recipient.setGroupId(input.getGroup_id());
+        	recipient.setLastName(input.getLastName());
+        	recipient.setName(input.getName());
+        	recipientService.save(recipient);
+        }
+    }
+}

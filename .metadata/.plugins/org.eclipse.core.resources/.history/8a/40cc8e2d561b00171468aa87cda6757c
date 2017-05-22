@@ -1,0 +1,12 @@
+package com.ponomaryov.dispatcher;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class DispatcherMain {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DispatcherMain.class, args);
+    }
+}

@@ -1,0 +1,7 @@
+package com.ponomaryov.recipients.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.jdmpro.recipients.domain.Recipient;
+
+public interface RecipientRepository extends JpaRepository<Recipient, String> {
+}

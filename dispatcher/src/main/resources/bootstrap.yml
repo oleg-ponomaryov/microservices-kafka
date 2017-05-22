@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: dispatcher
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        serviceId: config
+      password: ${CONFIG_SERVICE_PASSWORD}
+      username: user
+      

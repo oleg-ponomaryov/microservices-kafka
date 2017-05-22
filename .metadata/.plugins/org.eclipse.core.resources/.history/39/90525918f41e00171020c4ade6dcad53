@@ -1,0 +1,5 @@
+package com.quantlance.controllers;
+
+public class ImageProcessingController {
+
+}

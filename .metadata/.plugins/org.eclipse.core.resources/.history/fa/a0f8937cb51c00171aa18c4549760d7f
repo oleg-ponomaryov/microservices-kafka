@@ -1,0 +1,12 @@
+logging:
+  level:
+    org.springframework.security: INFO
+
+eureka:  
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    useDnsForFetchingServiceUrls: false
+    eurekaServerDNSName: localhost
+    eurekaServerPort: 8761
+    eurekaServerURLContext: eureka

@@ -1,0 +1,34 @@
+package com.ponomaryov.dispatcher.controllers;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+import com.ponomaryov.commonbeans.Recipient;
+import com.ponomaryov.dispatcher.bindings.RecipientSource;
+
+@Slf4j
+@RestController
+@EnableBinding(RecipientSource.class)
+@RequestMapping("/recipients")
+public class RecipientCreateController {
+
+    private RecipientSource recipientSource;
+
+    @Autowired
+    public RecipientCreateController(final RecipientSource source) {
+        this.recipientSource = source;
+    }
+
+    @RequestMapping(method = RequestMethod.POST)
+    public Recipient create(@RequestBody Recipient recipient) {
+    	recipientSource.output().send(MessageBuilder.withPayload(recipient).build());
+        log.info("Recipient {} has been created:", recipient);
+        return recipient;
+    }
+}

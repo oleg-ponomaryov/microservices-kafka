@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: registry
+# cloud:
+#    config:
+#      uri: http://config:8888
+#      fail-fast: true
+#      password: ${CONFIG_SERVICE_PASSWORD}
+#      username: user
+      
+eureka:
+  instance:
+    hostname: eureka
+    leaseRenewalIntervalInSeconds: 3
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+  server:
+    waitTimeInMsWhenSyncEmpty: 0

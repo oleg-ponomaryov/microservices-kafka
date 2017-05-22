@@ -1,0 +1,53 @@
+package com.ponomaryov.recipients.controllers;
+
+import java.util.Collection;
+import java.util.NoSuchElementException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.jdmpro.recipients.domain.Recipient;
+import com.jdmpro.recipients.services.RecipientService;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+@Controller
+public class RecipientController {
+
+    @Autowired
+    private RecipientService recipientService;
+    
+    /*** For large number here should be paging ***/
+    @RequestMapping(value = "/recipients/all", method=RequestMethod.GET)
+    public @ResponseBody Collection<Recipient> getAllRecipients() {
+        return recipientService.getAllRecipients();
+    }
+    
+    @RequestMapping(method=RequestMethod.DELETE, value="/recipients/{id}")
+    public @ResponseBody void delete(@PathVariable String id) {
+    	recipientService.delete(id);
+    }
+
+    @RequestMapping(method=RequestMethod.PUT, value="/recipients/{id}")
+    public @ResponseBody Recipient update(@PathVariable String id, @RequestBody Recipient recipient) {
+      return recipientService.update(recipient);
+    }
+    
+    @RequestMapping(method=RequestMethod.GET, value="/recipients/{id}")
+    public @ResponseBody Recipient getRecipient(@PathVariable String id) {
+
+    	Recipient recipient = recipientService.getRecipientById(id);
+        if (recipient != null) {
+                return recipient;
+        }
+        else {
+                throw new NoSuchElementException(String.format("Recipient=%s not found", id));
+        }
+    }
+  }

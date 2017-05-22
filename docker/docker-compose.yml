@@ -1,0 +1,22 @@
+version: '2'
+
+services:
+    zookeeper:
+        build: .
+        command: /kafka/bin/zookeeper-server-start.sh /kafka/config/zookeeper.properties
+        ports:
+        - 2181:2181
+    kafka1:
+        build:
+            context: .
+            args:
+                brokerId: 1
+        command: bash -c "/kafka/bin/kafka-server-start.sh /kafka/config/server.properties && sleep 10 && /kafka/bin/kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 20 --topic recipient-save && sleep 4 && /kafka/bin/kafka-topics.sh --create --zookeeper zookeeper:2181 --replication-factor 1 --partitions 20 --topic group-save"
+        depends_on:
+        - zookeeper
+#    consumer:
+#        build: .
+#        command: bash -c "sleep 6 && /kafka/bin/kafka-console-consumer.sh --topic recipients --bootstrap-server kafka1:9092"
+#        depends_on:
+#        - zookeeper
+#        - kafka1

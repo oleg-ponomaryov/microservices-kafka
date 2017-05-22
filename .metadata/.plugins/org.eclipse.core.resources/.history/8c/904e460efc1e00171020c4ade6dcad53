@@ -1,0 +1,67 @@
+package com.quantlance.controllers;
+
+import static org.bytedeco.javacpp.lept.pixDestroy;
+import static org.bytedeco.javacpp.lept.pixRead;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import org.bytedeco.javacpp.BytePointer;
+import org.bytedeco.javacpp.lept.PIX;
+import org.bytedeco.javacpp.tesseract.TessBaseAPI;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
+import lombok.extern.slf4j.Slf4j;
+
+
+@Slf4j
+@Controller
+public class ImageProcessorController {
+
+	 private static String UPLOADED_FOLDER = "temp";
+	
+    private TessBaseAPI tessBaseAPI;
+    static final String DEFAULT_LANGUAGE = "eng";
+    
+    /*** For large number here should be paging 
+     * @throws IOException ***/
+    @PostMapping("/upload")
+    public String singleFileUpload(@RequestParam("file") MultipartFile file) throws IOException {
+        
+    	tessBaseAPI = new TessBaseAPI();
+    	
+    	int success = tessBaseAPI.Init(UPLOADED_FOLDER , DEFAULT_LANGUAGE);
+    			//.init(UPLOADED_FOLDER , DEFAULT_LANGUAGE);
+        //assertTrue(success);
+    	
+    	BytePointer outText;
+    	String ret = "";
+    	
+    	 byte[] bytes = file.getBytes();
+         Path path = Paths.get(UPLOADED_FOLDER + file.getOriginalFilename());
+         Files.write(path, bytes);
+         // path.getFileName().
+         
+         
+         log.info("Processing file:"+path.toAbsolutePath().toString());
+         PIX image = pixRead(path.toAbsolutePath().toString());
+         tessBaseAPI.SetImage(image);
+         log.info("Size of the image" +  tessBaseAPI.GetInputImage().sizeof());
+         
+         outText = tessBaseAPI.GetUTF8Text();
+         String string = outText.getString();
+         ret = "OCR output:\n" + string;
+         
+         tessBaseAPI.End();
+         outText.deallocate();
+         pixDestroy(image);
+         
+    	return ret;
+    }
+  }

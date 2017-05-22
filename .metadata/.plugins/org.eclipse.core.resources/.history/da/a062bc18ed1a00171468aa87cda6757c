@@ -1,0 +1,165 @@
+package com.ponomaryov.recipients;
+
+import static org.junit.Assert.assertEquals;
+
+import java.lang.reflect.Field;
+import java.util.Date;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.cloud.stream.annotation.Bindings;
+import org.springframework.cloud.stream.binding.InputBindingLifecycle;
+import org.springframework.cloud.stream.messaging.Sink;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.jdmpro.recipients.bindings.Consumer;
+import com.jdmpro.recipients.domain.Recipient;
+import com.jdmpro.recipients.repository.RecipientRepository;
+import com.jdmpro.recipients.services.RecipientService;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@SpringBootTest(classes = RecipientsMain.class, webEnvironment = WebEnvironment.RANDOM_PORT)
+@TestPropertySource(locations = "classpath:application-test.yml")
+public class RecipientControllerTest {
+
+	public static final Message<?> TEST_MESSAGE = MessageBuilder.withPayload("recipient").build();
+
+	@Autowired
+	ChannelInterceptor channelInterceptor;
+
+	@Autowired
+	RecipientService recipientService;
+
+	@Autowired
+	RecipientRepository recipientRepository;
+
+	@Autowired
+	@Bindings(Consumer.class)
+	public Sink recipientSink;
+
+	@Autowired
+	private TestRestTemplate template;
+
+	@Autowired
+    private ConfigurableApplicationContext applicationContext ;
+	
+	@After
+	public void tearDown() throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
+		recipientRepository.deleteAll();
+		InputBindingLifecycle  ch = (InputBindingLifecycle) applicationContext.getBean("inputBindingLifecycle");
+		Class <?> cl = ch.getClass();
+		Field field = cl.getDeclaredField("running");
+        field.setAccessible(true);
+        field.setBoolean(ch, false);
+		return;
+	}
+
+	@Test
+	public void getAllRecipients() throws Exception {
+
+		Recipient r0 = new Recipient();
+		r0.setName("ROLEG");
+		r0.setEmail("olponom@oleg.com");
+		r0.setDob(new Date());
+		r0.setFirstName("Oleg");
+		r0.setLastName("Ponomaryov");
+		r0.setGroupId("1");
+		recipientService.save(r0);
+		
+		Recipient r1 = new Recipient();
+		r1.setName("RJOHN");
+		r1.setEmail("john@john.com");
+		r1.setDob(new Date());
+		r1.setFirstName("John");
+		r1.setLastName("Dow");
+		r1.setGroupId("1");
+		recipientService.save(r1);
+
+		ResponseEntity<String> response = template.getForEntity("/recipients/all", String.class);
+		assertEquals(response.getStatusCode(), HttpStatus.OK);
+
+		List<Recipient> recipients = convertJsonToRecipients(response.getBody());
+		assertEquals(recipients.size(), 2);
+	}
+
+	@Test
+	public void updateRecipient() throws Exception {
+		Recipient r0 = new Recipient();
+		r0.setName("ROLEG");
+		r0.setEmail("olponom@oleg.com");
+		r0.setDob(new Date());
+		r0.setFirstName("Oleg");
+		r0.setLastName("Ponomaryov");
+		r0.setGroupId("1");
+		recipientService.save(r0);
+
+		r0.setName("Recipient for update");
+
+		String resourceUrl = "/recipients/" + r0.getId();
+		HttpEntity<Recipient> requestUpdate = new HttpEntity<>(r0, null);
+		ResponseEntity<Recipient> response = template.exchange(resourceUrl, HttpMethod.PUT, requestUpdate, Recipient.class);
+
+		assertEquals(response.getStatusCode(), HttpStatus.OK);
+		assertEquals(response.getBody().getName(), "Recipient for update");
+	}
+
+	@Test
+	public void deleteRecipient() throws Exception {
+
+		Recipient r0 = new Recipient();
+		r0.setName("ROLEG");
+		r0.setEmail("olponom@oleg.com");
+		r0.setDob(new Date());
+		r0.setFirstName("Oleg");
+		r0.setLastName("Ponomaryov");
+		r0.setGroupId("1");
+		recipientService.save(r0);
+		
+		Recipient r1 = new Recipient();
+		r1.setName("RJOHN");
+		r1.setEmail("john@john.com");
+		r1.setDob(new Date());
+		r1.setFirstName("John");
+		r1.setLastName("Dow");
+		r1.setGroupId("1");
+		recipientService.save(r1);
+
+		ResponseEntity<String> response = template.getForEntity("/recipients/all", String.class);
+		assertEquals(response.getStatusCode(), HttpStatus.OK);
+
+		List<Recipient> recipients = convertJsonToRecipients(response.getBody());
+		assertEquals(recipients.size(), 2);
+
+		String resourceUrl = "/recipients/" + r1.getId();
+		HttpEntity<String> requestDelete = new HttpEntity<>(r1.getId(), null);
+		template.exchange(resourceUrl, HttpMethod.DELETE, requestDelete, Void.class);
+
+		response = template.getForEntity("/recipients/all", String.class);
+		assertEquals(response.getStatusCode(), HttpStatus.OK);
+
+		recipients = convertJsonToRecipients(response.getBody());
+		assertEquals(recipients.size(), 1);
+	}
+
+	private List<Recipient> convertJsonToRecipients(String json) throws Exception {
+		ObjectMapper mapper = new ObjectMapper();
+		return mapper.readValue(json, TypeFactory.defaultInstance().constructCollectionType(List.class, Recipient.class));
+	}
+}

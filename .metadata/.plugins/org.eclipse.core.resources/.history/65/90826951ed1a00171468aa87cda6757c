@@ -1,0 +1,14 @@
+package com.jdmpro.groups.bindings;
+
+import org.springframework.cloud.stream.annotation.Input;
+import org.springframework.messaging.SubscribableChannel;
+
+import com.ponomaryov.commonbeans.Constants;
+
+public interface GroupSink {
+
+	String INPUT = Constants.GROUP_SINK_INPUT;
+
+	@Input(GroupSink.INPUT)
+	SubscribableChannel input();
+}

@@ -1,0 +1,12 @@
+package com.quantlance;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class ImageprocApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(ImageprocApplication.class, args);
+	}
+}
